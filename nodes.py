@@ -136,16 +136,52 @@ class NovelAILineart:
         return {
                 "required": {
                     "input_image": ("IMAGE",),
-
                 },
             }
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "tolineart"
 
-
     def tolineart(self, input_image=None):
         if (NAI_API_KEY == "<KEY>"):
             raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
         api = NovelAIAPI(api_key=NAI_API_KEY)
         return (api.toLineArt(input_image))
+class NovelAISketch:
+    CATEGORY = "NovelAI_Sketch_Processor"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                "required": {
+                    "input_image": ("IMAGE",),
+                },
+            }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "tosketch"
+
+    def tosketch(self, input_image=None):
+        if (NAI_API_KEY == "<KEY>"):
+            raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
+        api = NovelAIAPI(api_key=NAI_API_KEY)
+        return (api.toSketchArt(input_image))
+class NovelAIDeclutter:
+    CATEGORY = "NovelAI_Declutter_Processor"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                "required": {
+                    "input_image": ("IMAGE",),
+                },
+            }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "declutter"
+
+    def declutter(self, input_image=None):
+        if (NAI_API_KEY == "<KEY>"):
+            raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
+        api = NovelAIAPI(api_key=NAI_API_KEY)
+        return (api.declutter(input_image))
