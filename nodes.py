@@ -9,8 +9,8 @@ class NovelAINode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "prompt_positive": ("STRING", {"default": "CLIP_POSITIVE","multiline": True}),
-                "prompt_negative": ("STRING", {"default": "CLIP_NEGATIVE","multiline": True}),
+                "prompt_positive": ("STRING", {"default": "POSITIVE prompt","multiline": True}),
+                "prompt_negative": ("STRING", {"default": "NEGATIVE prompt","multiline": True}),
                 "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "sampler": (cls.samplers, {"default": "k_euler_ancestral"}),  # Choose sampler
                 "model": (cls.models, {"default": "nai-diffusion-3"}),

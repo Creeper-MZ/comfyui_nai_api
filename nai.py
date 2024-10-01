@@ -64,11 +64,15 @@ class NovelAIAPI:
             }
         }
         if input_image is not None:
+            input_image = input_image.squeeze(0)
+            input_image = (input_image * 255).byte().numpy()
+            input_image = Image.fromarray(input_image)
             buffer = io.BytesIO()
             input_image.save(buffer, format="PNG")
             image_payload = base64.b64encode(buffer.getvalue()).decode("utf-8")
             data["action"]="img2img"
             data["parameters"]["image"] = image_payload
+            data["parameters"]["extra_noise_seed"] = random.randint(0, 0xffffffffffffffff)
 
         # Send the request to NovelAI API
         data_json = json.dumps(data)
