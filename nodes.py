@@ -127,3 +127,25 @@ class NovelAIVibe:
                 vibe_pipe["reference_information_extracted_multiple"]+=[image[1]]
                 vibe_pipe["reference_strength_multiple"] += [image[2]]
         return (vibe_pipe,)
+
+class NovelAILineart:
+    CATEGORY = "NovelAI_Lineart_Processor"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+                "required": {
+                    "input_image": ("IMAGE",),
+
+                },
+            }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "tolineart"
+
+
+    def tolineart(self, input_image=None):
+        if (NAI_API_KEY == "<KEY>"):
+            raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
+        api = NovelAIAPI(api_key=NAI_API_KEY)
+        return (api.toLineArt(input_image))

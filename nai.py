@@ -24,9 +24,40 @@ class NovelAIAPI:
         print("Generated image")
         image = Image.open(io.BytesIO(image_data)).convert('RGB')
         np_image = np.array(image)
+        print(np_image.shape)
         tensor_image = torch.unsqueeze(torch.tensor(np_image), 0).float()/255
         print(tensor_image.shape)
         return tensor_image
+    def toLineArt(self,input_image):
+        input_image = input_image.squeeze(0)
+        input_image = (input_image * 255).byte().numpy()
+        input_image = Image.fromarray(input_image)
+        buffer = io.BytesIO()
+        input_image.save(buffer, format="PNG")
+        image_payload = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        data = {
+            "height": input_image.height,
+            "width": input_image.width,
+            "req_type":"lineart",
+            "image":image_payload
+        }
+        data_json = json.dumps(data)
+        response = requests.post(self.base_url + "/augment-image", headers=self.headers, data=data_json)
+        if response.status_code == 200:
+            # Handle successful response
+            with zipfile.ZipFile(io.BytesIO(response.content)) as zip_ref:
+                with zip_ref.open("image_0.png") as image_file:
+                    image_data = image_file.read()
+                    #print(image_data)
+                    print("Generated image lineart")
+                    #image = Image.open(io.BytesIO(image_data))
+                    #tensor_image = torch.unsqueeze(torch.tensor(image).permute(2, 0, 1), 0).float() / 255
+                    return (self.convert_image_to_tensor(image_data),)
+        else:
+            raise Exception(f"Image generation failed: {response.status_code}, {response.text}")
+
+    def toSketchArt(self,image):
+        ...
     def generate_image(self, input_text, model, width, height, scale, sampler, steps, n_samples=1, ucPreset=0,
                        qualityToggle=True, sm=False, sm_dyn=False, dynamic_thresholding=False, controlnet_strength=1, legacy=False, add_original_image=True,
                        cfg_rescale=0, noise_schedule="native", legacy_v3_extend=False,input_image=None, seed=0, negative_prompt="",
