@@ -3,7 +3,11 @@ import io
 import json
 import random
 import zipfile
+
+import numpy as np
 import requests
+import torch
+from PIL import Image
 
 
 class NovelAIAPI:
@@ -16,6 +20,13 @@ class NovelAIAPI:
             "Authorization": f"Bearer {api_key}",
         }
 
+    def convert_image_to_tensor(self,image_data):
+        print("Generated image")
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')
+        np_image = np.array(image)
+        tensor_image = torch.unsqueeze(torch.tensor(np_image), 0).float()/255
+        print(tensor_image.shape)
+        return tensor_image
     def generate_image(self, input_text, model, width, height, scale, sampler, steps, n_samples=1, ucPreset=0,
                        qualityToggle=True, sm=False, sm_dyn=False, dynamic_thresholding=False, controlnet_strength=1, legacy=False, add_original_image=True,
                        cfg_rescale=0, noise_schedule="native", legacy_v3_extend=False,input_image=None, seed=0, negative_prompt="",
@@ -69,6 +80,8 @@ class NovelAIAPI:
                 with zip_ref.open("image_0.png") as image_file:
                     image_data = image_file.read()
                     print("Generated image")
-                    return image_data
+                    #image = Image.open(io.BytesIO(image_data))
+                    #tensor_image = torch.unsqueeze(torch.tensor(image).permute(2, 0, 1), 0).float() / 255
+                    return (self.convert_image_to_tensor(image_data),)
         else:
             raise Exception(f"Image generation failed: {response.status_code}, {response.text}")

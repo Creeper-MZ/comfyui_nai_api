@@ -4,7 +4,7 @@ class NovelAINode:
     CATEGORY = "NovelAI"
     samplers = ["k_euler", "k_euler_ancestral", "k_dpmpp_2s_ancestral", "k_dpmpp_2m_sde", "k_dpmpp_2m", "k_dpmpp_sde", "ddim_v3"]
     schedulers = ["native", "karras", "exponential", "polyexponential"]
-
+    models = ["","nai-diffusion-2", "nai-diffusion-3", "nai-diffusion-furry-3"]
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -13,6 +13,7 @@ class NovelAINode:
                 "prompt_negative": ("STRING", {"default": "CLIP_NEGATIVE","multiline": True}),
                 "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "sampler": (cls.samplers, {"default": "k_euler_ancestral"}),  # Choose sampler
+                "model": (cls.models, {"default": "nai-diffusion-3"}),
                 "scheduler": (cls.schedulers, {"default": "karras"}),  # Choose scheduler
                 "smea": (["enable", "disable"], {"default": "enable"}),  # SMEA setting
                 "smea_dyn": (["enable", "disable"], {"default": "enable"}),  # Dynamic SMEA setting
@@ -31,13 +32,15 @@ class NovelAINode:
     FUNCTION = "generate_image"
 
     def generate_image(self, input_image=None, prompt_positive="", prompt_negative="", noise_seed=0,
-                       sampler="k_euler_ancestral", scheduler="karras", smea="enable", smea_dyn="enable", steps=28,
+                       sampler="k_euler_ancestral",model="nai-diffusion-3", scheduler="karras", smea="enable", smea_dyn="enable", steps=28,
                        cfg_scale=6.0, width=832, height=1216):
         print("into")
+        if(NAI_API_KEY == "<KEY>"):
+            raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
         api = NovelAIAPI(api_key=NAI_API_KEY)
         return (api.generate_image(
             input_text=prompt_positive,
-            model="nai-diffusion-3",  # Assuming 'novelai' model for now
+            model=model,  # Assuming 'novelai' model for now
             width=width,
             height=height,
             scale=cfg_scale,
