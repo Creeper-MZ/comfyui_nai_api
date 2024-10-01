@@ -1,3 +1,8 @@
+import base64
+import io
+
+from PIL import Image
+
 from .nai import NovelAIAPI
 from .config import NAI_API_KEY
 class NovelAINode:
@@ -31,13 +36,20 @@ class NovelAINode:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "generate_image"
 
-    def generate_image(self, input_image=None, prompt_positive="", prompt_negative="", noise_seed=0,
+    def generate_image(self, input_image=None,vibe_pipe=None, prompt_positive="", prompt_negative="", noise_seed=0,
                        sampler="k_euler_ancestral",model="nai-diffusion-3", scheduler="karras", smea="enable", smea_dyn="enable", steps=28,
                        cfg_scale=6.0, width=832, height=1216):
         print("into")
         if(NAI_API_KEY == "<KEY>"):
             raise Exception("API key not set,please configure your API key in config.py in the plugin directory.")
         api = NovelAIAPI(api_key=NAI_API_KEY)
+        reference_image_multiple=[]
+        reference_information_extracted_multiple = []
+        reference_strength_multiple = []
+        if vibe_pipe is not None:
+            reference_image_multiple = vibe_pipe["reference_image_multiple"]
+            reference_information_extracted_multiple = vibe_pipe["reference_information_extracted_multiple"]
+            reference_strength_multiple = vibe_pipe["reference_strength_multiple"]
         return (api.generate_image(
             input_text=prompt_positive,
             model=model,  # Assuming 'novelai' model for now
@@ -60,9 +72,9 @@ class NovelAINode:
             legacy_v3_extend=False,
             seed=noise_seed if noise_seed else None,
             negative_prompt=prompt_negative,
-            reference_image_multiple=[],
-            reference_information_extracted_multiple=[],
-            reference_strength_multiple=[],
+            reference_image_multiple=reference_image_multiple,
+            reference_information_extracted_multiple=reference_information_extracted_multiple,
+            reference_strength_multiple=reference_strength_multiple,
             input_image=input_image
         ))
 class NovelAIVibe:
@@ -74,12 +86,12 @@ class NovelAIVibe:
                 "input_image": ("IMAGE",),
                 "information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
                 "strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
-                "2_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
-                "2_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
-                "3_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
-                "3_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
-                "4_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
-                "4_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
+                "image2_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
+                "image2_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
+                "image3_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
+                "image3_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
+                "image4_information_extracted": ("FLOAT", {"default": 1.0, "min": 0, "max": 1.0}),
+                "image4_strength": ("FLOAT", {"default": 0.7, "min": 0, "max": 1.0}),
 
             },
             "optional": {
@@ -91,6 +103,27 @@ class NovelAIVibe:
 
     RETURN_TYPES = ("VIBE_PIPE",)
     FUNCTION = "process_vibe"
-
-    def process_vibe(self, ):
-        return ()
+    def toBase64(self,image):
+        image = image.squeeze(0)
+        image = (image * 255).byte().numpy()
+        image = Image.fromarray(image)
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        image_payload = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return image_payload
+    def process_vibe(self,input_image=None,input_image_2=None,input_image_3=None,input_image_4=None,information_extracted=1.0,
+                     image2_information_extracted=1.0, image3_information_extracted=1.0, image4_information_extracted=1.0,strength=0.7,
+                     image2_strength=0.7, image3_strength=0.7, image4_strength=0.7):
+        vibe_pipe = {
+            "reference_image_multiple":[],
+            "reference_information_extracted_multiple": [],
+            "reference_strength_multiple": []
+        }
+        images = [[input_image,information_extracted,strength],[input_image_2,image2_information_extracted,image2_strength],
+                  [input_image_3,image3_information_extracted,image3_strength],[input_image_4,image4_information_extracted,image4_strength]]
+        for image in images:
+            if image[0] is not None:
+                vibe_pipe["reference_image_multiple"]+=[self.toBase64(image[0])]
+                vibe_pipe["reference_information_extracted_multiple"]+=[image[1]]
+                vibe_pipe["reference_strength_multiple"] += [image[2]]
+        return (vibe_pipe,)
