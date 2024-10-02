@@ -1,7 +1,7 @@
 [project]
 name = "comfyui_nai_api"
-description = "A node that can use Nai in Comfyui"
-version = "1.1.4"
+description = "A node that can use NovelAPI in Comfyui, now support some Director tools as processors. Support vibe,img2img,text2img"
+version = "1.2"
 license = {file = "LICENSE"}
 
 [project.urls]
